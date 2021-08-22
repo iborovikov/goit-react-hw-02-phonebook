@@ -2,7 +2,7 @@ import { Component } from 'react';
 import './App.css';
 import Form from './Components/Form/Form'
 import Filter from './Components/Filter/filter'
-import Contacts from './Components/Contacts/Contacts';
+import ContactList from './Components/Contacts/ContactList';
 import shortid from 'shortid';
 
 class App extends Component {
@@ -14,56 +14,70 @@ class App extends Component {
       {id: 'id-4', name: 'Annie Copeland', number: '227-91-26'},
     ],
     filter: '',
-    name: '',
-    number: ''
   };
 
-  onInputChange = (name, value) => {
-    this.setState(
-      { [name]: value }
-    )
-  };
-
-  resetInput = () => {
-    this.setState({
-      filter: '',
-      name: '',
-      number: ''
-    });
-  };
-
-  onFormSubmit = () => {
+  addContact = (name, number) => {
     const id = shortid.generate();
     this.setState((prevState) =>
       prevState.contacts.push({
-        name: prevState.name,
-        number: prevState.number,
+        name: name,
+        number: number,
         id
       })
     )
-    this.resetInput()
+  };
+  
+  removeContact = (id) => {
+    this.setState(prevState => {
+      const newContacts = prevState.contacts.filter(contact => contact.id !== id)
+      return { contacts: newContacts }
+    })
+  };
+
+  onFilterInputChange = (value) => {
+    this.setState(
+      { filter: value }
+    )
+  };
+
+  resetFilterInput = () => {
+    this.setState({
+      filter: ''
+    });
+  };
+
+  isNameInList = (name) => this.state.contacts.find(contact =>
+      contact.name.toLowerCase() === name.toLowerCase());
+
+  onFormSubmit = (name, number) => {
+    if (this.isNameInList(name)) {
+      this.resetFilterInput()
+      return alert(`${name} is already in contacts`)
+    };
+    this.addContact(name, number);
+    this.resetFilterInput()
   };
 
   render() {
+    const { contacts, filter } = this.state
+    const {onFormSubmit, onFilterInputChange, removeContact} = this
 
 
-    const normalizedContact = this.state.filter.toLowerCase();
-    const visibleContacts = this.state.contacts.filter(
-      contact => contact.name.toLowerCase().includes(normalizedContact))
+    const normalizedContact = filter.toLowerCase();
+    const visibleContacts = contacts.filter(
+      contact => contact.name.toLowerCase().includes(normalizedContact));
+    
     return (
       <>
         <h1>Phonebook</h1>
-        <Form name={this.state.name} number={this.state.number} onInputChange={this.onInputChange} onFormSubmit={this.onFormSubmit} />
+        <Form onFormSubmit={onFormSubmit} />
         <h2>Contacts</h2>
-        <Filter onInputChange={ this.onInputChange } filter={this.state.filter} />
-        <Contacts contacts={visibleContacts} />
+        <Filter onFilterInputChange={ onFilterInputChange } filter={filter} />
+        <ContactList contacts={visibleContacts} removeContact={ removeContact }/>
       </>
     )
   };
-  
-   
-  
-}
+};
 
 
 export default App;
